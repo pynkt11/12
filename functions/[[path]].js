@@ -2,28 +2,24 @@ export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const host = url.hostname;
-  
+
   if (host === 'cgcasino.app' || host === 'www.cgcasino.app') {
     return env.ASSETS.fetch(request);
   }
 
   const sub = host.split('.')[0];
-  
-  // Достаем оригинальный путь (например, /style.css или /)
   let path = url.pathname;
-  if (path === '/') path = '/index.html';
   
-  // Создаем путь к файлу внутри папки поддомена
-  const assetPath = `/sites/${sub}${path}`;
+  // Принудительно строим путь
+  const assetPath = path === '/' ? `/sites/${sub}/index.html` : `/sites/${sub}${path}`;
   
-  // Пытаемся получить этот конкретный файл
+  // Делаем запрос к конкретному файлу
   const response = await env.ASSETS.fetch(new Request(new URL(assetPath, url.origin), request));
   
-  // Если файл найден (статус 200), отдаем его
-  if (response.status === 200) {
-    return response;
+  // ЕСЛИ ФАЙЛ НЕ НАЙДЕН, МЫ ДОЛЖНЫ ЭТО УВИДЕТЬ
+  if (response.status === 404) {
+    return new Response(`File not found: ${assetPath}`, { status: 404 });
   }
-  
-  // Если файла нет, возвращаем 404, чтобы не отдавать главную
-  return new Response("Not Found", { status: 404 });
+
+  return response;
 }
