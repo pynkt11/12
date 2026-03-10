@@ -1,21 +1,28 @@
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
-  const host = url.hostname;
+  const hostname = url.hostname;
 
-  if (host.includes('cgcasino.app')) {
-    const sub = host.split('.')[0];
-    const path = url.pathname;
-
-    // Если запрос уже внутри папки поддомена — просто отдаем файл
-    if (path.startsWith(`/${sub}/`)) {
-      return env.ASSETS.fetch(request);
-    }
-
-    // ТИХАЯ ПОДМЕНА: переписываем запрос внутри сервера
-    const newPath = path === '/' ? `/${sub}/index.html` : `/${sub}${path}`;
-    return env.ASSETS.fetch(new Request(new URL(newPath, url.origin), request));
+  // 1. Игнорируем основной домен
+  if (hostname === 'cgcasino.app' || hostname === 'www.cgcasino.app') {
+    return env.ASSETS.fetch(request);
   }
 
-  return env.ASSETS.fetch(request);
+  // 2. Определяем поддомен
+  const sub = hostname.split('.')[0];
+  
+  // 3. Формируем путь строго к файлу, а не к папке
+  // Если зашли в корень или по адресу /beton -> отдаем /beton/index.html
+  let targetPath;
+  if (url.pathname === '/' || url.pathname === `/${sub}`) {
+    targetPath = `/${sub}/index.html`;
+  } else {
+    targetPath = `/${sub}${url.pathname}`;
+  }
+
+  // 4. Создаем новый запрос БЕЗ редиректа
+  const newRequest = new Request(new URL(targetPath, url.origin), request);
+
+  // 5. Отдаем файл
+  return env.ASSETS.fetch(newRequest);
 }
