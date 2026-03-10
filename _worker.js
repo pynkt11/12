@@ -1,16 +1,15 @@
 export default {
-  async fetch(request, env) {
+  async fetch(request) {
     const url = new URL(request.url);
-    const host = url.hostname;
-    const subdomain = host.split('.')[0];
-
-    // Если это главный домен или www, просто отдаем контент (не трогаем его)
-    if (subdomain === 'cgcasino' || subdomain === 'www') {
-      return fetch(request);
+    // Проверяем, какой хост запросили
+    if (url.hostname === 'cgcasino.app' || url.hostname === 'www.cgcasino.app') {
+      return fetch(request); // Основной сайт отдаем как есть
     }
 
-    // Для любых других поддоменов (betera, beton и т.д.) перенаправляем в папку
+    // Если это поддомен (например, betera.cgcasino.app)
+    const subdomain = url.hostname.split('.')[0];
     const newUrl = new URL(`/sites/${subdomain}/index.html`, url.origin);
-    return fetch(new Request(newUrl.toString(), request));
+    
+    return fetch(new Request(newUrl, request));
   }
 };
