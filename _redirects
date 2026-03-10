@@ -1,1 +1,8 @@
-/  /beton/index.html  200
+# Правило для beton
+beton.cgcasino.app/  /beton/index.html  200
+
+# Правило для betera
+betera.cgcasino.app/  /betera/index.html  200
+
+# Если есть другие — добавляй по аналогии:
+# subdomain.domain.com/  /subdomain/index.html  200
