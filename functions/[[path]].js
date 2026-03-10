@@ -3,21 +3,19 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const hostname = url.hostname;
 
-  // Игнорируем основной домен
+  // Основной домен отдаем как есть
   if (hostname === "cgcasino.app" || hostname === "www.cgcasino.app") {
     return env.ASSETS.fetch(request);
   }
 
   const subdomain = hostname.split(".")[0];
 
-  // Определяем путь в ассетах
-  let pathname = url.pathname === "/" ? `/${subdomain}/index.html` : `/${subdomain}${url.pathname}`;
-
-  // Создаём новый URL для fetch с origin pages
-  const assetUrl = new URL(pathname, request.url);
+  // Определяем путь в папке поддомена
+  let assetPath = url.pathname === "/" ? `/` : url.pathname;
 
   try {
-    const assetRequest = new Request(assetUrl.toString(), {
+    // Создаём новый Request и переписываем его путь в подпапку поддомена
+    const assetRequest = new Request(new URL(`/${subdomain}${assetPath}`, request.url), {
       method: request.method,
       headers: request.headers,
       body: request.body,
@@ -26,7 +24,7 @@ export async function onRequest(context) {
 
     let response = await env.ASSETS.fetch(assetRequest);
 
-    // Если 404 — fallback на корень
+    // Если файл не найден, fallback на корень
     if (response.status === 404) {
       response = await env.ASSETS.fetch(request);
     }
