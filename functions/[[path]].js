@@ -2,17 +2,19 @@ export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
   const host = url.hostname;
-  const sub = host.split('.')[0];
-
-  // 1. Если это главный домен - отдаем как обычно
-  if (sub === 'cgcasino' || sub === 'www' || sub === '12-c54') {
+  
+  // 1. Если это главный домен - работаем как обычно
+  if (host === 'cgcasino.app' || host === 'www.cgcasino.app') {
     return context.next();
   }
 
-  // 2. Если зашли на поддомен - переписываем путь
-  // Мы делаем это ВНУТРИ Cloudflare, пользователь не увидит /sites/ в браузере
-  url.pathname = `/sites/${sub}${url.pathname === '/' ? '/index.html' : url.pathname}`;
+  // 2. Вытаскиваем поддомен
+  const sub = host.split('.')[0];
+  
+  // 3. Формируем путь к файлу в папке sites
+  const newPath = `/sites/${sub}/index.html`;
 
-  // 3. Возвращаем контент по новому пути
-  return fetch(new Request(url, request));
+  // 4. ДЕЛАЕМ ПЕРЕНАПРАВЛЕНИЕ (внутреннее)
+  // Мы используем fetch, чтобы "подтянуть" содержимое из нужной папки
+  return fetch(new Request(new URL(newPath, url.origin), request));
 }
