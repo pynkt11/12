@@ -1,15 +1,18 @@
-<script>
-  (function() {
-    var host = window.location.hostname;
-    var path = window.location.pathname;
-    
-    // Если мы на поддомене и НЕ в папке этого поддомена
-    if (host !== 'cgcasino.app' && host !== 'www.cgcasino.app') {
-      var sub = host.split('.')[0];
-      if (!path.startsWith('/' + sub)) {
-        // Жестко перекидываем в нужную папку
-        window.location.replace('/' + sub + '/');
-      }
-    }
-  })();
-</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG Casino</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #111; color: white; }
+        .container { text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CG Casino Main Gateway</h1>
+        <p>This is the root page for the main domain.</p>
+    </div>
+</body>
+</html>
