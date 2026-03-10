@@ -1,21 +1,15 @@
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
-  const host = url.hostname;
-  const sub = host.split('.')[0];
+  const sub = url.hostname.split('.')[0];
 
-  // Если это главный домен - просто отдаем контент
-  if (sub === 'cgcasino' || sub === 'www' || sub === '12-c54') {
+  // Если это главный домен - отдаем стандартно
+  if (sub === 'cgcasino' || sub === 'www' || sub === 'app') {
     return context.next();
   }
 
-  // Внутренняя магия: переписываем путь скрытно
-  // Если пользователь зашел на betera.cgcasino.app/
-  // Мы подменяем путь на /sites/betera/index.html
-  // Но в браузере он всё еще будет видеть betera.cgcasino.app/
+  // Внутренний роутинг: просто переписываем запрос
+  url.pathname = `/sites/${sub}${url.pathname === '/' ? '/index.html' : url.pathname}`;
   
-  let newPath = url.pathname === '/' ? `/sites/${sub}/index.html` : `/sites/${sub}${url.pathname}`;
-  
-  const newRequest = new Request(new URL(newPath, url.origin), request);
-  return fetch(newRequest);
+  return fetch(new Request(url, request));
 }
