@@ -1,21 +1,21 @@
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
-  const host = url.hostname; // Это будет, например, 'betera.cgcasino.app'
-  const parts = host.split('.');
+  const host = url.hostname;
+  const sub = host.split('.')[0];
 
-  // Если это поддомен (например, betera.cgcasino.app)
-  if (parts.length >= 3) {
-    const sub = parts[0]; // 'betera'
-    
-    // Переписываем путь: из '/' делаем '/sites/betera/index.html'
-    let path = url.pathname === '/' ? '/index.html' : url.pathname;
-    url.pathname = `/sites/${sub}${path}`;
-    
-    // Возвращаем результат из этой же папки
-    return context.next(new Request(url, request));
+  // Если это главный домен - просто отдаем контент
+  if (sub === 'cgcasino' || sub === 'www' || sub === '12-c54') {
+    return context.next();
   }
 
-  // Если это просто cgcasino.app - идем дальше (к статике)
-  return context.next();
+  // Внутренняя магия: переписываем путь скрытно
+  // Если пользователь зашел на betera.cgcasino.app/
+  // Мы подменяем путь на /sites/betera/index.html
+  // Но в браузере он всё еще будет видеть betera.cgcasino.app/
+  
+  let newPath = url.pathname === '/' ? `/sites/${sub}/index.html` : `/sites/${sub}${url.pathname}`;
+  
+  const newRequest = new Request(new URL(newPath, url.origin), request);
+  return fetch(newRequest);
 }
