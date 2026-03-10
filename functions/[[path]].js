@@ -3,25 +3,21 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const hostname = url.hostname;
 
-  // Основной домен, отдаем как есть
+  // Игнорируем основной домен
   if (hostname === "cgcasino.app" || hostname === "www.cgcasino.app") {
     return env.ASSETS.fetch(request);
   }
 
-  // Берём поддомен
   const subdomain = hostname.split(".")[0];
 
-  // Определяем путь для ассетов
-  let assetPath = url.pathname;
-  if (assetPath === "/") {
-    assetPath = `/${subdomain}/index.html`;
-  } else {
-    assetPath = `/${subdomain}${assetPath}`;
-  }
+  // Определяем путь в ассетах
+  let pathname = url.pathname === "/" ? `/${subdomain}/index.html` : `/${subdomain}${url.pathname}`;
+
+  // Создаём новый URL для fetch с origin pages
+  const assetUrl = new URL(pathname, request.url);
 
   try {
-    // Создаём новый Request только с путём, без изменения host
-    const assetRequest = new Request(assetPath, {
+    const assetRequest = new Request(assetUrl.toString(), {
       method: request.method,
       headers: request.headers,
       body: request.body,
