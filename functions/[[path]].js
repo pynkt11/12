@@ -10,23 +10,19 @@ export async function onRequest(context) {
 
   // 2. Вытаскиваем поддомен (например, 'beton')
   const sub = hostname.split('.')[0];
-  
-  // 3. Если мы УЖЕ в папке поддомена (защита от циклов), отдаем как есть
-  if (url.pathname.startsWith(`/${sub}/`)) {
-    return env.ASSETS.fetch(request);
-  }
 
-  // 4. Генерируем внутренний путь
+  // 3. Генерируем внутренний путь
   // Если зашли на корень поддомена, берем /sub/index.html
-  const newPath = url.pathname === '/' ? `/${sub}/index.html` : `/${sub}${url.pathname}`;
-  const newUrl = new URL(newPath, url.origin);
+  // Но НЕ добавляем поддомен в путь для запроса
+  const internalPath = url.pathname === '/' ? `/${sub}/index.html` : url.pathname;
 
-  // 5. Запрашиваем файл напрямую из системы ассетов
-  const response = await env.ASSETS.fetch(new Request(newUrl, request));
+  // 4. Запрашиваем файл напрямую из ассетов
+  const newRequest = new Request(new URL(internalPath, request.url), request);
+  let response = await env.ASSETS.fetch(newRequest);
 
-  // 6. Если в папке поддомена файла НЕТ (404), пробуем отдать из корня
+  // 5. Если файла нет (404), пробуем отдать как fallback
   if (response.status === 404) {
-    return env.ASSETS.fetch(request);
+    response = await env.ASSETS.fetch(request);
   }
 
   return response;
