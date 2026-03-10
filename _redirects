@@ -1,8 +1,6 @@
-# Правило для beton
-beton.cgcasino.app/  /beton/index.html  200
+# Сначала точные совпадения для поддоменов
+/  /beton/index.html  200
+/index.html  /beton/index.html  200
 
-# Правило для betera
-betera.cgcasino.app/  /betera/index.html  200
-
-# Если есть другие — добавляй по аналогии:
-# subdomain.domain.com/  /subdomain/index.html  200
+# Если нужно, чтобы и внутренние файлы (css/js) подхватывались из папки:
+/* /beton/:splat  200
