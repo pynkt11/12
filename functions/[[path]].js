@@ -1,25 +1,13 @@
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
-  const host = url.hostname;
+  const sub = url.hostname.split('.')[0];
 
-  if (host === 'cgcasino.app' || host === 'www.cgcasino.app') {
-    return env.ASSETS.fetch(request);
+  // Если запрос к корню поддомена — ищем его index.html
+  if (url.pathname === '/') {
+    return env.ASSETS.fetch(new Request(new URL(`/${sub}/index.html`, url.origin), request));
   }
 
-  const sub = host.split('.')[0];
-  let path = url.pathname;
-  
-  // Принудительно строим путь
-  const assetPath = path === '/' ? `/sites/${sub}/index.html` : `/sites/${sub}${path}`;
-  
-  // Делаем запрос к конкретному файлу
-  const response = await env.ASSETS.fetch(new Request(new URL(assetPath, url.origin), request));
-  
-  // ЕСЛИ ФАЙЛ НЕ НАЙДЕН, МЫ ДОЛЖНЫ ЭТО УВИДЕТЬ
-  if (response.status === 404) {
-    return new Response(`File not found: ${assetPath}`, { status: 404 });
-  }
-
-  return response;
+  // Если запрос к файлу (стили, скрипты) — ищем в подпапке
+  return env.ASSETS.fetch(new Request(new URL(`/${sub}${url.pathname}`, url.origin), request));
 }
