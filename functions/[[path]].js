@@ -3,18 +3,29 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const hostname = url.hostname;
 
-  // Игнорируем основной домен
+  // 1. Если это главный домен - отдаем как есть
   if (hostname === 'cgcasino.app' || hostname === 'www.cgcasino.app') {
     return env.ASSETS.fetch(request);
   }
 
-  // Берем имя поддомена (например, 'beton')
+  // 2. Определяем поддомен (beton, kent и т.д.)
   const sub = hostname.split('.')[0];
   
-  // Формируем путь к файлу внутри папки
-  const newPath = `/${sub}${url.pathname === '/' ? '/index.html' : url.pathname}`;
+  // 3. Строим внутренний путь. 
+  // Если зашли на корень, берем /sub/index.html, иначе /sub/путь
+  const targetPath = url.pathname === '/' ? `/${sub}/index.html` : `/${sub}${url.pathname}`;
   
-  // Создаем новый URL и запрашиваем его из ассетов
-  const assetUrl = new URL(newPath, url.origin);
-  return env.ASSETS.fetch(new Request(assetUrl, request));
+  // 4. Генерируем новый URL для запроса ассетов
+  const newUrl = new URL(targetPath, url.origin);
+
+  // 5. Пробуем достать файл
+  const response = await env.ASSETS.fetch(new Request(newUrl, request));
+
+  // 6. Если файл в папке поддомена не найден (404), 
+  // отдаем файл из корня (на всякий случай)
+  if (response.status === 404) {
+    return env.ASSETS.fetch(request);
+  }
+
+  return response;
 }
