@@ -3,39 +3,40 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const hostname = url.hostname;
 
-  // Основной домен не трогаем
-  if (hostname === 'cgcasino.app' || hostname === 'www.cgcasino.app') {
+  // Основной домен, отдаем как есть
+  if (hostname === "cgcasino.app" || hostname === "www.cgcasino.app") {
     return env.ASSETS.fetch(request);
   }
 
-  // Поддомен (например 'kent', 'beton')
-  const sub = hostname.split('.')[0];
+  // Берём поддомен
+  const subdomain = hostname.split(".")[0];
 
-  // Путь для fetch ассетов
+  // Определяем путь для ассетов
   let assetPath = url.pathname;
-
-  // Если корень поддомена, отдаём index.html в папке поддомена
-  if (url.pathname === '/') {
-    assetPath = `/${sub}/index.html`;
+  if (assetPath === "/") {
+    assetPath = `/${subdomain}/index.html`;
   } else {
-    // Если путь не корень, просто оставляем его и ищем в папке поддомена
-    // assetPath = `/${sub}${url.pathname}`;  <- не нужно, иначе будет /kent/kent/...
-    assetPath = `/${sub}${url.pathname}`;
+    assetPath = `/${subdomain}${assetPath}`;
   }
 
-  // Создаём fetch к ASSETS с переписанным путём
-  const fetchRequest = new Request(assetPath, {
-    method: request.method,
-    headers: request.headers,
-    body: request.body,
-  });
+  try {
+    // Создаём новый Request только с путём, без изменения host
+    const assetRequest = new Request(assetPath, {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+      redirect: "manual"
+    });
 
-  let response = await env.ASSETS.fetch(fetchRequest);
+    let response = await env.ASSETS.fetch(assetRequest);
 
-  // Если не нашли файл, fallback на основной ассет
-  if (response.status === 404) {
-    response = await env.ASSETS.fetch(request);
+    // Если 404 — fallback на корень
+    if (response.status === 404) {
+      response = await env.ASSETS.fetch(request);
+    }
+
+    return response;
+  } catch (err) {
+    return new Response("Worker error: " + err.message, { status: 500 });
   }
-
-  return response;
 }
