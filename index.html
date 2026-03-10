@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Aladdin Play</title>
+</head>
+<body>
+    <h1 id="title">Загрузка...</h1>
+    
+    <p>🎉 Откройте для себя Aladdin Play — надежное онлайн казино с высокими рейтингами!</p>
+    
+    <p>Что ждёт вас:
+    <br>✅ До 100 фриспинов за создание аккаунта
+    <br>✅ Ежедневные бонусы и возврат средств
+    <br>✅ Мгновенная регистрация аккаунта
+    <br>✅ Служба поддержки 24/7</p>
+
+    <script>
+        // Скрипт берет поддомен из адреса (например, site1.cgcasino.app -> site1)
+        const host = window.location.hostname;
+        const parts = host.split('.');
+        if (parts.length > 2) {
+            const subdomain = parts[0];
+            document.getElementById('title').innerText = "Aladdin Play: " + subdomain.toUpperCase();
+        } else {
+            document.getElementById('title').innerText = "Aladdin Play";
+        }
+    </script>
+</body>
+</html>
