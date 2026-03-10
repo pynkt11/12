@@ -4,15 +4,23 @@ export async function onRequest(context) {
   const host = url.hostname;
   const sub = host.split('.')[0];
 
-  // Если основной домен - отдаем корень
+  // 1. Если это не поддомен (главный сайт) — просто отдаем контент
   if (host === 'cgcasino.app' || host === 'www.cgcasino.app') {
     return env.ASSETS.fetch(request);
   }
 
-  // Для поддоменов - меняем путь к файлу внутри проекта
-  // Теперь используем env.ASSETS, чтобы Cloudflare не "ругался"
+  // 2. Формируем путь к файлу для поддомена
+  // Если пользователь зашел на корень поддомена, ищем index.html в нужной папке
   const newPath = `/sites/${sub}${url.pathname === '/' ? '/index.html' : url.pathname}`;
-  const newRequest = new Request(new URL(newPath, url.origin), request);
+  
+  // Создаем новый URL на основе оригинального запроса
+  const newUrl = new URL(newPath, url.origin);
+  const newRequest = new Request(newUrl, request);
 
-  return env.ASSETS.fetch(newRequest);
+  // 3. Пытаемся получить файл
+  const response = await env.ASSETS.fetch(newRequest);
+
+  // 4. Если файл найден — отдаем его. 
+  // Если 404 — попробуем вернуть главный сайт или ошибку
+  return response;
 }
